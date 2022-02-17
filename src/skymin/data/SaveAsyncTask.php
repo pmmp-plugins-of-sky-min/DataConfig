@@ -63,34 +63,34 @@ final class SaveAsyncTask extends AsyncTask{
 		$fileName = $this->fileName;
 		$data = (array) $this->data;
 		if(is_dir($fileName)){
-		    $this->setResult(false);
-		    return;
+			$this->setResult(false);
+			return;
 		}
 		$dir = dirname($fileName);
 		if(!is_dir($dir)){
-		    mkdir($dier);
+			mkdir($dier);
 		}
 		$count = 0;
 		do{
-		    $tmpFileName = $fileName . ".$count.tmp";
+			$tmpFileName = $fileName . ".$count.tmp";
 			$count++;
 		}while(is_dir($tmpFileName) || file_exists($tmpFileName));
 		$content = match($this->type){
-		    Data::YAML => yaml_emit($data, YAML_UTF8_ENCODING),
-		    Data::JSON => json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
-		    Data::LIST => implode("\n", array_keys($data)),
-		    default => 1
+			Data::YAML => yaml_emit($data, YAML_UTF8_ENCODING),
+			Data::JSON => json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
+			Data::LIST => implode("\n", array_keys($data)),
+			default => 1
 		};
 		if(!is_string($content)){
-		    unlink($tmpFileName);
-		    $this->setResult(false);
-		    return;
+			unlink($tmpFileName);
+			$this->setResult(false);
+			return;
 		}
 		$result = file_put_contents($tmpFileName, $content);
 		if($result !== strlen($content)){
-		    unlink($tmpFileName);
-		    $this->setResult(false);
-		    return;
+			unlink($tmpFileName);
+			$this->setResult(false);
+			return;
 		}
 		rename($tmpFileName, $fileName);
 		$this->setResult(true);
@@ -98,7 +98,7 @@ final class SaveAsyncTask extends AsyncTask{
 	
 	public function onCompletion() :void{
 		if(!$this->getResult()){
-		    $this->logger->error('Failed to save Data at' . $this->fileName);
+			$this->logger->error('Failed to save Data at' . $this->fileName);
 		}
 	}
 	
