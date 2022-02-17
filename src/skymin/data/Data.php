@@ -27,39 +27,101 @@ namespace skymin\data;
 
 use pocketmine\Server;
 
+use \RuntimeException;
+
+use function trim;
+use function explode;
+use function yaml_parse;
+use function json_decode;
+use function str_replace;
+use function preg_replace;
 use function file_exists;
 use function file_get_contents;
-use function json_decode;
-use function yaml_parse;
-use function preg_replace;
 
 final class Data{
-	use SaveTrait;
-	
-	public const YAML = 0;
-	public const JSON = 1;
-	
-	public static function call(string $fileName, int $type = self::YAML, array $default = []) :array{
-		if(!file_exists($fileName)){
-			return $default;
-		}
-		$content = file_get_contents($fileName);
-		if($type === self::YAML){
-			return yaml_parse(preg_replace("#^( *)(y|Y|yes|Yes|YES|n|N|no|No|NO|true|True|TRUE|false|False|FALSE|on|On|ON|off|Off|OFF)( *)\:#m", "$1\"$2\"$3:", $content));
-		}
-		if($type === self::JSON){
-			return json_decode($content, true);
-		}else{
-			throw new \LogicException('unknown type');
-		}
+
+	public const YAML = 0; //.yml, .yaml
+	public const JSON = 1; //.js, .json
+	public const LIST = 2; //.txt
+
+	/** @var mixed[] */ 
+	public array $data;
+
+	/** @param mixed[] $default */
+	public function __construct(
+	    private string $fileName,
+	    private int $type = self::JSON,
+	    array $default = []
+	){
+	    $this->load($default);
 	}
-	
-	public static function save(string $fileName, array $data, int $type = self::YAML, bool $async = true) :void{
-		if($async){
-			Server::getInstance()->getAsyncPool()->submitTask(new SaveAsyncTask($fileName, $data, $type));
-			return;
-		}
-		self::restore($type, $fileName, $data);
+
+	/** @param mixed[] $default */
+	private function load(array $default) : void{
+	    $fileName = $this->fileName;
+	    if(!file_exists($fileName)){
+	        $this->data = $default;
+	        $this->save();
+	    }
+	    $content = file_get_contents($fileName);
+	    if($content === false){
+	        throw new RuntimeException('Unable to load file');
+	    }
+	    $result = match($this->type){
+	        self::YAML => self::parseYaml($content),
+	        self::JSON => json_decode($content, true),
+	        self::LIST => self::parseList($content),
+	        default => throw new RuntimeException('unknown data type')
+	    };
+	    if(!is_array($result)){
+	        throw new RuntimeException('Failed to load' . $fileName);
+	    }
+	    $this->data = $result;
 	}
-	
+
+	public function save() : void{
+	    Server::getInstance()->getAsyncPool()->submitTask(new SaveAsyncTask($this->fileName, $this->type, $this->data));
+	}
+
+	public function getPath() : string{
+	    return $this->fileName;
+	}
+
+	public function __get(mixed $key) : mixed{
+	    if($key === null){
+	        return $this->data;
+	    }
+	    return $this->data[$key];
+	}
+
+	public function __set(mixed $key, mixed $value) : void{
+	    if($key === null){
+	        $this->data = $value;
+	        return;
+	    }
+	    $this->data[$key] = $value;
+	}
+
+	public function __isset(mixed $key) : bool{
+	    return (isset($this->data[$key]));
+	}
+
+	public function __unset(mixed $key) : void{
+	    unset($this->data[$key]);
+	}
+
+	private static function parseYaml(string $content) : mixed{
+	    return yaml_parse(preg_replace("#^( *)(y|Y|yes|Yes|YES|n|N|no|No|NO|true|True|TRUE|false|False|FALSE|on|On|ON|off|Off|OFF)( *)\:#m", "$1\"$2\"$3:", $content));
+	}
+
+	private static function parseList(string $content) : array{
+	    $result = [];
+	    foreach(explode("\n", trim(str_replace("\r\n", "\n", $content))) as $str){
+	        $str = trim($str);
+	        if(trim($str) === '') continue;
+	    	$result[] = $str;
+	    }
+	    return $result;
+	}
+
 }
