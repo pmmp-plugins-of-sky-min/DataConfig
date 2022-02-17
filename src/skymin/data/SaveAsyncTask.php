@@ -63,7 +63,7 @@ final class SaveAsyncTask extends AsyncTask{
 		$fileName = $this->fileName;
 		$data = (array) $this->data;
 		if(is_dir($fileName)){
-		    throw new \RuntimeException('Target file path already exists and is not a file');
+		    $this->setResult(false);
 		}
 		$dir = dirname($fileName);
 		if(!is_dir($dir)){
