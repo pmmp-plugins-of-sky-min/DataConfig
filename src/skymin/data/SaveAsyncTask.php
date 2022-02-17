@@ -64,6 +64,7 @@ final class SaveAsyncTask extends AsyncTask{
 		$data = (array) $this->data;
 		if(is_dir($fileName)){
 		    $this->setResult(false);
+		    return;
 		}
 		$dir = dirname($fileName);
 		if(!is_dir($dir)){
