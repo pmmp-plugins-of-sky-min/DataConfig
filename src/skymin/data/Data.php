@@ -124,7 +124,7 @@ final class Data{
 	}
 
 	private static function parseList(string $content) : array{
-	    result = [];
+	    $result = [];
 	    foreach(explode("\n", trim(str_replace("\r\n", "\n", $content))) as $str){
 	        $str = trim($str);
 	        if(trim($str) === '') continue;
