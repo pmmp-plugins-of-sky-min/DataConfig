@@ -29,32 +29,39 @@ use pocketmine\Server;
 
 use \RuntimeException;
 
+use function trim;
+use function explode;
+use function yaml_parse;
+use function json_decode;
+use function str_replace;
+use function preg_replace;
 use function file_exists;
 use function file_get_contents;
-use function json_decode;
-use function yaml_parse;
-use function preg_replace;
 
 final class Data{
-    
+
 	public const YAML = 0; //.yml, .yaml
 	public const JSON = 1; //.js, .json
 	public const LIST = 2; //.txt
-	
+
 	/**
 	 * @var mixed[]
 	 * @phpstan-var array<string, mixed>
 	 */ 
 	public array $data;
-	
+
 	/**
 	 * @param mixed[] $default
 	 * @phpstan-param array<string, mixed> $default
 	 */
-	public function __construct(private string $fileName, private int $type, array $default = []){
+	public function __construct(
+	    private string $fileName,
+	    private int $type = self::JSON,
+	    array $default = []
+	){
 	    $this->load($default);
 	}
-	
+
 	/**
 	 * @param mixed[] $default
 	 * @phpstan-param array<string, mixed> $default
@@ -80,60 +87,50 @@ final class Data{
 	    }
 	    $this->data = $result;
 	}
-	
+
 	public function save() : void{
-	    
+	    Server::getInstance()getAsyncPool()->submitTask(new SaveAsyncTask($this->fileName, $this->type, $this->data));
 	}
-	
+
 	public function getPath() : string{
 	    return $this->fileName;
 	}
-	
-	/** @return mixed[] */
-	public function getAll() : array{
-	    return $this->data;
-	}
-	
-	/**
-	 * @param mixed[] $data
-     * @phpstan-param array<string, mixed> $data
-	 */
-	public function setAll(array $data) : void{
-	    $this->data = $data;
-	}
-	
-	public function __get(string $key) : mixed{
+
+	public function __get(?string $key) : mixed{
+	    if($key === null){
+	        return $this->data;
+	    }
 	    return $this->data[$key];
 	}
-		
-	public function __set(string $key, mixed $value) : void{
+
+	public function __set(?string $key, mixed $value) : void{
+	    if($key === null){
+	        $this->data = $value;
+	        return;
+	    }
 	    $this->data[$key] = $value;
 	}
-		
+
 	public function __isset(string $key) : bool{
 	    return (isset($this->data[$key]));
 	}
-		
+
 	public function __unset(string $key) : void{
 	    unset($this->data[$key]);
 	}
-	
+
 	private static function parseYaml(string $content) : mixed{
-	    $result = yaml_parse(preg_replace("#^( *)(y|Y|yes|Yes|YES|n|N|no|No|NO|true|True|TRUE|false|False|FALSE|on|On|ON|off|Off|OFF)( *)\:#m", "$1\"$2\"$3:", $content));
-	    if($result === false){
-	        throw new RuntimeException('yaml parse failed');
-	    }
-	    return $result;
+	    return yaml_parse(preg_replace("#^( *)(y|Y|yes|Yes|YES|n|N|no|No|NO|true|True|TRUE|false|False|FALSE|on|On|ON|off|Off|OFF)( *)\:#m", "$1\"$2\"$3:", $content));
 	}
-	
-	private static function parseList(string $content) : mixed{
+
+	private static function parseList(string $content) : array{
 	    result = [];
 	    foreach(explode("\n", trim(str_replace("\r\n", "\n", $content))) as $str){
 	        $str = trim($str);
-	        if(trim($) === '') continue;
+	        if(trim($str) === '') continue;
 	    	$result[] = $str;
 	    }
 	    return $result;
 	}
-	
+
 }

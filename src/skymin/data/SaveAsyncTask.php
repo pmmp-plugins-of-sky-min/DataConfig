@@ -30,33 +30,75 @@ use pocketmine\scheduler\AsyncTask;
 
 use PrefixedLogger;
 
+use function mkdir;
+use function is_dir;
+use function dirname;
+use function strlen;
+use function rename;
+use function unlink;
+use function yaml_emit;
+use function json_encode;
+use function is_string;
+use function array_keys;
+use function file_exists;
+use function file_put_contents;
+
+use const JSON_PRETTY_PRINT;
+use const JSON_UNESCAPED_UNICODE;
+use const YAML_UTF8_ENCODING;
+
 final class SaveAsyncTask extends AsyncTask{
-	use SaveTrait;
 	
 	private PrefixedLogger $logger;
 	
 	public function __construct(
 		private string $fileName,
-		private array $data,
-		private int $type
+		private int $type,
+		private array $data
 	){
 		$this->logger = new PrefixedLogger(Server::getInstance()->getLogger(), 'DataConfig');
 	}
 	
 	public function onRun() :void{
-		$type = $this->type;
 		$fileName = $this->fileName;
 		$data = (array) $this->data;
-		$this->logger->debug('Starting save data at ' .  $fileName);
-		if(self::restore($type, $fileName, $data)){
-			$this->setResult('Completed');
-		}else{
-			$this->setResult('Failed');
+		if(is_dir($fileName)){
+		    throw new \RuntimeException('Target file path already exists and is not a file');
 		}
+		$dir = dirname($fileName);
+		if(!is_dir($dir)){
+		    mkdir($dier);
+		}
+		$count = 0;
+		do{
+		    $tmpFileName = $fileName . ".$count.tmp";
+			$count++;
+		}while(is_dir($tmpFileName) || file_exists($tmpFileName));
+		$content = match($this->type){
+		    Data::YAML => yaml_emit($data, YAML_UTF8_ENCODING),
+		    Data::JSON => json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
+		    Data::LIST => implode("\n", array_keys($data)),
+		    default => 1
+		};
+		if(!is_string($content)){
+		    unlink($tmpFileName);
+		    $this->setResult(false);
+		    return;
+		}
+		$result = file_put_contents($tmpFileName, $content);
+		if($result !== strlen($content)){
+		    unlink($tmpFileName);
+		    $this->setResult(false);
+		    return;
+		}
+		rename($tmpFileName, $fileName);
+		$this->setResult(true);
 	}
 	
 	public function onCompletion() :void{
-		$this->logger->debug($this->getResult() . ' to save Data at' . $this->fileName);
+		if(!$this->getResult()){
+		    $this->logger->error('Failed to save Data at' . $this->fileName);
+		}
 	}
 	
 }
