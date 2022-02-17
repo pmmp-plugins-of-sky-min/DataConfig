@@ -31,7 +31,6 @@ use \RuntimeException;
 
 use function trim;
 use function explode;
-use function is_s
 use function yaml_parse;
 use function json_decode;
 use function str_replace;
