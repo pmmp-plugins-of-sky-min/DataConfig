@@ -31,6 +31,7 @@ use \RuntimeException;
 
 use function trim;
 use function explode;
+use function is_s
 use function yaml_parse;
 use function json_decode;
 use function str_replace;
@@ -44,16 +45,10 @@ final class Data{
 	public const JSON = 1; //.js, .json
 	public const LIST = 2; //.txt
 
-	/**
-	 * @var mixed[]
-	 * @phpstan-var array<string, mixed>
-	 */ 
+	/** @var mixed[] */ 
 	public array $data;
 
-	/**
-	 * @param mixed[] $default
-	 * @phpstan-param array<string, mixed> $default
-	 */
+	/** @param mixed[] $default */
 	public function __construct(
 	    private string $fileName,
 	    private int $type = self::JSON,
@@ -62,10 +57,7 @@ final class Data{
 	    $this->load($default);
 	}
 
-	/**
-	 * @param mixed[] $default
-	 * @phpstan-param array<string, mixed> $default
-	 */
+	/** @param mixed[] $default */
 	private function load(array $default) : void{
 	    $fileName = $this->fileName;
 	    if(!file_exists($fileName)){
@@ -96,14 +88,14 @@ final class Data{
 	    return $this->fileName;
 	}
 
-	public function __get(?string $key) : mixed{
+	public function __get(mixed $key) : mixed{
 	    if($key === null){
 	        return $this->data;
 	    }
 	    return $this->data[$key];
 	}
 
-	public function __set(?string $key, mixed $value) : void{
+	public function __set(mixed $key, mixed $value) : void{
 	    if($key === null){
 	        $this->data = $value;
 	        return;
@@ -111,11 +103,11 @@ final class Data{
 	    $this->data[$key] = $value;
 	}
 
-	public function __isset(string $key) : bool{
+	public function __isset(mixed $key) : bool{
 	    return (isset($this->data[$key]));
 	}
 
-	public function __unset(string $key) : void{
+	public function __unset(mixed $key) : void{
 	    unset($this->data[$key]);
 	}
 
