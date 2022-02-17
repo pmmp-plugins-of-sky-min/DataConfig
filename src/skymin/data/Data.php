@@ -69,8 +69,8 @@ final class Data{
 	private function load(array $default) : void{
 	    $fileName = $this->fileName;
 	    if(!file_exists($fileName)){
+	        $this->data = $default;
 	        $this->save();
-	        return $default;
 	    }
 	    $content = file_get_contents($fileName);
 	    if($content === false){
