@@ -89,7 +89,7 @@ final class Data{
 	}
 
 	public function save() : void{
-	    Server::getInstance()getAsyncPool()->submitTask(new SaveAsyncTask($this->fileName, $this->type, $this->data));
+	    Server::getInstance()->getAsyncPool()->submitTask(new SaveAsyncTask($this->fileName, $this->type, $this->data));
 	}
 
 	public function getPath() : string{
