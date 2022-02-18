@@ -26,80 +26,102 @@ declare(strict_types = 1);
 namespace skymin\data;
 
 use pocketmine\Server;
-use pocketmine\scheduler\AsyncTask;
 
-use PrefixedLogger;
+use \RuntimeException;
 
-use function mkdir;
-use function is_dir;
-use function dirname;
-use function strlen;
-use function rename;
-use function unlink;
-use function yaml_emit;
-use function json_encode;
-use function is_string;
-use function array_keys;
+use function trim;
+use function explode;
+use function yaml_parse;
+use function json_decode;
+use function str_replace;
+use function preg_replace;
 use function file_exists;
-use function file_put_contents;
+use function file_get_contents;
 
-use const JSON_PRETTY_PRINT;
-use const JSON_UNESCAPED_UNICODE;
-use const YAML_UTF8_ENCODING;
+final class Data{
 
-final class SaveAsyncTask extends AsyncTask{
-	
-	private PrefixedLogger $logger;
-	
+	public const YAML = 0; //.yml, .yaml
+	public const JSON = 1; //.js, .json
+	public const LIST = 2; //.txt
+
+	/** @var mixed[] */ 
+	public array $data;
+
+	/** @param mixed[] $default */
 	public function __construct(
 		private string $fileName,
-		private int $type,
-		private array $data
+		private int $type = self::JSON,
+		array $default = []
 	){
-		$this->logger = new PrefixedLogger(Server::getInstance()->getLogger(), 'DataConfig');
+		$this->load($default);
 	}
-	
-	public function onRun() :void{
+
+	/** @param mixed[] $default */
+	private function load(array $default) : void{
 		$fileName = $this->fileName;
-		$data = (array) $this->data;
-		if(is_dir($fileName)){
-			$this->setResult(false);
-			return;
+		if(!file_exists($fileName)){
+			$this->data = $default;
+			$this->save();
 		}
-		$dir = dirname($fileName);
-		if(!is_dir($dir)){
-			mkdir($dier);
+		$content = file_get_contents($fileName);
+		if($content === false){
+			throw new RuntimeException('Unable to load file');
 		}
-		$count = 0;
-		do{
-			$tmpFileName = $fileName . ".$count.tmp";
-			$count++;
-		}while(is_dir($tmpFileName) || file_exists($tmpFileName));
-		$content = match($this->type){
-			Data::YAML => yaml_emit($data, YAML_UTF8_ENCODING),
-			Data::JSON => json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
-			Data::LIST => implode("\n", array_keys($data)),
-			default => 1
+		$result = match($this->type){
+			self::YAML => self::parseYaml($content),
+			self::JSON => json_decode($content, true),
+			self::LIST => self::parseList($content),
+			default => throw new RuntimeException('unknown data type')
 		};
-		if(!is_string($content)){
-			unlink($tmpFileName);
-			$this->setResult(false);
+		if(!is_array($result)){
+			throw new RuntimeException('Failed to load' . $fileName);
+		}
+		$this->data = $result;
+	}
+
+	public function save() : void{
+		Server::getInstance()->getAsyncPool()->submitTask(new SaveAsyncTask($this->fileName, $this->type, $this->data));
+	}
+
+	public function getPath() : string{
+		return $this->fileName;
+	}
+
+	public function __get(mixed $key) : mixed{
+		if($key === null){
+			return $this->data;
+		}
+		return $this->data[$key];
+	}
+
+	public function __set(mixed $key, mixed $value) : void{
+		if($key === null){
+			$this->data = $value;
 			return;
 		}
-		$result = file_put_contents($tmpFileName, $content);
-		if($result !== strlen($content)){
-			unlink($tmpFileName);
-			$this->setResult(false);
-			return;
-		}
-		rename($tmpFileName, $fileName);
-		$this->setResult(true);
+		$this->data[$key] = $value;
 	}
-	
-	public function onCompletion() :void{
-		if(!$this->getResult()){
-			$this->logger->error('Failed to save Data at' . $this->fileName);
-		}
+
+	public function __isset(mixed $key) : bool{
+		return (isset($this->data[$key]));
 	}
-	
+
+	public function __unset(mixed $key) : void{
+		unset($this->data[$key]);
+	}
+
+	private static function parseYaml(string $content) : mixed{
+		return yaml_parse(preg_replace("#^( *)(y|Y|yes|Yes|YES|n|N|no|No|NO|true|True|TRUE|false|False|FALSE|on|On|ON|off|Off|OFF)( *)\:#m", "$1\"$2\"$3:", $content));
+	}
+
+	private static function parseList(string $content) : array{
+		$result = [];
+		foreach(explode("\n", trim(str_replace("\r\n", "\n", $content))) as $str){
+			$str = trim($str);
+			if(trim($str) === '') continue;
+			$result[] = $str;
+		}
+		return $result;
+	}
+
 }

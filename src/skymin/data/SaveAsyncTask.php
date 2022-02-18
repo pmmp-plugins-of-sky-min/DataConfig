@@ -48,9 +48,9 @@ use const JSON_UNESCAPED_UNICODE;
 use const YAML_UTF8_ENCODING;
 
 final class SaveAsyncTask extends AsyncTask{
-	
+
 	private PrefixedLogger $logger;
-	
+
 	public function __construct(
 		private string $fileName,
 		private int $type,
@@ -58,7 +58,7 @@ final class SaveAsyncTask extends AsyncTask{
 	){
 		$this->logger = new PrefixedLogger(Server::getInstance()->getLogger(), 'DataConfig');
 	}
-	
+
 	public function onRun() :void{
 		$fileName = $this->fileName;
 		$data = (array) $this->data;
@@ -95,11 +95,11 @@ final class SaveAsyncTask extends AsyncTask{
 		rename($tmpFileName, $fileName);
 		$this->setResult(true);
 	}
-	
+
 	public function onCompletion() :void{
 		if(!$this->getResult()){
 			$this->logger->error('Failed to save Data at' . $this->fileName);
 		}
 	}
-	
+
 }
