@@ -118,7 +118,7 @@ final class Data{
 		$result = [];
 		foreach(explode("\n", trim(str_replace("\r\n", "\n", $content))) as $str){
 			$str = trim($str);
-			if(trim($str) === '') continue;
+			if($str === '') continue;
 			$result[] = $str;
 		}
 		return $result;
