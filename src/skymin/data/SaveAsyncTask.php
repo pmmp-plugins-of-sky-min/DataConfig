@@ -79,7 +79,7 @@ final class SaveAsyncTask extends AsyncTask{
 			Data::YAML => yaml_emit($data, YAML_UTF8_ENCODING),
 			Data::JSON => json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
 			Data::LIST => implode("\n", array_keys($data)),
-			default => 1
+			default => false
 		};
 		if(!is_string($content)){
 			unlink($tmpFileName);

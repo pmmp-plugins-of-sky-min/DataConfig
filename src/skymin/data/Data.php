@@ -62,6 +62,7 @@ final class Data{
 		if(!file_exists($fileName)){
 			$this->data = $default;
 			$this->save();
+			return;
 		}
 		$content = file_get_contents($fileName);
 		if($content === false){
