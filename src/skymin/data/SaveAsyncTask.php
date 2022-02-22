@@ -61,20 +61,20 @@ final class SaveAsyncTask extends AsyncTask{
 
 	public function onRun() :void{
 		$fileName = $this->fileName;
-		$data = (array) $this->data;
 		if(is_dir($fileName)){
 			$this->setResult(false);
 			return;
 		}
 		$dir = dirname($fileName);
 		if(!is_dir($dir)){
-			mkdir($dier);
+			mkdir($dir);
 		}
 		$count = 0;
 		do{
 			$tmpFileName = $fileName . ".$count.tmp";
 			$count++;
 		}while(is_dir($tmpFileName) || file_exists($tmpFileName));
+		$data = (array) $this->data;
 		$content = match($this->type){
 			Data::YAML => yaml_emit($data, YAML_UTF8_ENCODING),
 			Data::JSON => json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
