@@ -48,9 +48,9 @@ use const JSON_UNESCAPED_UNICODE;
 use const YAML_UTF8_ENCODING;
 
 final class SaveAsyncTask extends AsyncTask{
-
+	
 	private PrefixedLogger $logger;
-
+	
 	public function __construct(
 		private string $fileName,
 		private int $type,
@@ -58,28 +58,28 @@ final class SaveAsyncTask extends AsyncTask{
 	){
 		$this->logger = new PrefixedLogger(Server::getInstance()->getLogger(), 'DataConfig');
 	}
-
+	
 	public function onRun() :void{
 		$fileName = $this->fileName;
+		$data = (array) $this->data;
 		if(is_dir($fileName)){
 			$this->setResult(false);
 			return;
 		}
 		$dir = dirname($fileName);
 		if(!is_dir($dir)){
-			mkdir($dir);
+			mkdir($dier);
 		}
 		$count = 0;
 		do{
 			$tmpFileName = $fileName . ".$count.tmp";
 			$count++;
 		}while(is_dir($tmpFileName) || file_exists($tmpFileName));
-		$data = (array) $this->data;
 		$content = match($this->type){
-			Data::YAML => yaml_emit($data, YAML_UTF8_ENCODING),
-			Data::JSON => json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
-			Data::LIST => implode("\n", array_keys($data)),
-			default => false
+			0 => yaml_emit($data, YAML_UTF8_ENCODING),
+			1 => json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
+			2 => implode("\n", array_keys($data)),
+			default => 1
 		};
 		if(!is_string($content)){
 			unlink($tmpFileName);
@@ -95,11 +95,11 @@ final class SaveAsyncTask extends AsyncTask{
 		rename($tmpFileName, $fileName);
 		$this->setResult(true);
 	}
-
+	
 	public function onCompletion() :void{
 		if(!$this->getResult()){
 			$this->logger->error('Failed to save Data at' . $this->fileName);
 		}
 	}
-
+	
 }
