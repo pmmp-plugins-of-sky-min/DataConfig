@@ -68,7 +68,7 @@ final class SaveAsyncTask extends AsyncTask{
 		}
 		$dir = dirname($fileName);
 		if(!is_dir($dir)){
-			mkdir($dier);
+			mkdir($dir);
 		}
 		$count = 0;
 		do{
