@@ -36,10 +36,12 @@ use function dirname;
 use function strlen;
 use function rename;
 use function unlink;
-use function yaml_emit;
-use function json_encode;
+use function is_bool;
+use function is_scalar;
 use function is_string;
 use function array_keys;
+use function yaml_emit;
+use function json_encode;
 use function file_exists;
 use function file_put_contents;
 
@@ -48,17 +50,13 @@ use const JSON_UNESCAPED_UNICODE;
 use const YAML_UTF8_ENCODING;
 
 final class SaveAsyncTask extends AsyncTask{
-	
-	private PrefixedLogger $logger;
-	
+
 	public function __construct(
 		private string $fileName,
 		private int $type,
 		private array $data
-	){
-		$this->logger = new PrefixedLogger(Server::getInstance()->getLogger(), 'DataConfig');
-	}
-	
+	){}
+
 	public function onRun() :void{
 		$fileName = $this->fileName;
 		$data = (array) $this->data;
@@ -79,7 +77,8 @@ final class SaveAsyncTask extends AsyncTask{
 			0 => yaml_emit($data, YAML_UTF8_ENCODING),
 			1 => json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
 			2 => implode("\n", array_keys($data)),
-			default => 1
+			3 => self::writeIni($data),
+			default => false
 		};
 		if(!is_string($content)){
 			unlink($tmpFileName);
@@ -95,11 +94,25 @@ final class SaveAsyncTask extends AsyncTask{
 		rename($tmpFileName, $fileName);
 		$this->setResult(true);
 	}
-	
+
+	private static function writeIni(array $data) : false|string{
+		$result = '';
+		foreach($data as $key => $value){
+			if(!is_scalar($value)){
+				return false;
+			}
+			if(is_bool($value)){
+				$value = (int) $value;
+			}
+			$result .= "{$key}={$value}\n";
+		}
+		return $result;
+	}
+
 	public function onCompletion() :void{
 		if(!$this->getResult()){
-			$this->logger->error('Failed to save Data at' . $this->fileName);
+			(new PrefixedLogger(Server::getInstance()->getLogger(), 'DataConfig'))->error('Failed to save Data at' . $this->fileName);
 		}
 	}
-	
+
 }

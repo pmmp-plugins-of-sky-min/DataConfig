@@ -31,18 +31,24 @@ use \RuntimeException;
 
 use function trim;
 use function explode;
-use function yaml_parse;
-use function json_decode;
+use function array_map;
 use function str_replace;
 use function preg_replace;
+use function stripcslashes;
+use function yaml_parse;
+use function json_decode;
+use function parse_ini_string; 
 use function file_exists;
 use function file_get_contents;
+
+use const INI_SCANNER_RAW;
 
 final class Data{
 
 	public const YAML = 0; //.yml, .yaml
 	public const JSON = 1; //.js, .json
 	public const LIST = 2; //.txt
+	public const INI = 3; //.ini
 
 	/** @var mixed[] */ 
 	public array $data;
@@ -72,6 +78,7 @@ final class Data{
 			self::YAML => self::parseYaml($content),
 			self::JSON => json_decode($content, true),
 			self::LIST => self::parseList($content),
+			self::INI => self::parseIni($content),
 			default => throw new RuntimeException('unknown data type')
 		};
 		if(!is_array($result)){
@@ -88,7 +95,7 @@ final class Data{
 		return $this->fileName;
 	}
 
-	public function __get(mixed $key) : mixed{
+	public function __get(mixed $key = null) : mixed{
 		if($key === null){
 			return $this->data;
 		}
@@ -119,10 +126,18 @@ final class Data{
 		$result = [];
 		foreach(explode("\n", trim(str_replace("\r\n", "\n", $content))) as $str){
 			$str = trim($str);
-			if($str === '') continue;
+			if(trim($str) === '') continue;
 			$result[] = $str;
 		}
 		return $result;
+	}
+
+	private static function parseIni(string $content) : false|array{
+		$result = parse_ini_string($content, false, INI_SCANNER_RAW);
+		if($result === false){
+			return false;
+		}
+		return array_map('stripcslashes', $result);
 	}
 
 }
