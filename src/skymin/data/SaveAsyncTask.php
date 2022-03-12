@@ -44,22 +44,28 @@ use function yaml_emit;
 use function json_encode;
 use function file_exists;
 use function file_put_contents;
+use function igbinary_serialize;
+use function igbinary_unserialize;
 
+use const YAML_UTF8_ENCODING;
 use const JSON_PRETTY_PRINT;
 use const JSON_UNESCAPED_UNICODE;
-use const YAML_UTF8_ENCODING;
 
 final class SaveAsyncTask extends AsyncTask{
+	
+	private string $data;
 
 	public function __construct(
 		private string $fileName,
 		private int $type,
-		private array $data
-	){}
+		array $data
+	){
+		$this->data = igbinary_serialize($data);
+	}
 
 	public function onRun() :void{
 		$fileName = $this->fileName;
-		$data = (array) $this->data;
+		$data = igbinary_unserialize($this->data);
 		if(is_dir($fileName)){
 			$this->setResult(false);
 			return;
