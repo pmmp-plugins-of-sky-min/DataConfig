@@ -54,6 +54,7 @@ use const JSON_UNESCAPED_UNICODE;
 final class SaveAsyncTask extends AsyncTask{
 	
 	private string $data;
+	private PrefixedLogger $logger;
 
 	public function __construct(
 		private string $fileName,
@@ -61,10 +62,12 @@ final class SaveAsyncTask extends AsyncTask{
 		array $data
 	){
 		$this->data = igbinary_serialize($data);
+		$this->logger = new PrefixedLogger(Server::getInstance()->getLogger(), 'DataConfig');
 	}
 
 	public function onRun() :void{
 		$fileName = $this->fileName;
+		$this->logger->debug('Starting save data at ' .  $fileName);
 		$data = igbinary_unserialize($this->data);
 		if(is_dir($fileName)){
 			$this->setResult(false);
@@ -116,8 +119,12 @@ final class SaveAsyncTask extends AsyncTask{
 	}
 
 	public function onCompletion() :void{
-		if(!$this->getResult()){
-			(new PrefixedLogger(Server::getInstance()->getLogger(), 'DataConfig'))->error('Failed to save Data at' . $this->fileName);
+		$logger = $this->logger;
+		$fileName = $this->fileName;
+		if($this->getResult()){
+			$logger->debug('Completed to save Data at ' . $fileName);
+		}else{
+			$logger->error('Failed to save Data at' . $fileName);
 		}
 	}
 
