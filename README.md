@@ -34,4 +34,5 @@ $this->data->save();
 Data::YAML
 Data::JSON
 Data::LIST
+Data::INI
 ```
