@@ -87,6 +87,10 @@ final class Data{
 		$this->data = $result;
 	}
 
+	public function reload() : void{
+		$this->load($this->data);
+	}
+
 	public function save() : void{
 		Server::getInstance()->getAsyncPool()->submitTask(new SaveAsyncTask($this->fileName, $this->type, $this->data));
 	}

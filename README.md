@@ -1,7 +1,7 @@
 # DataConfig
 PMMP 4.0
 
-Save `yaml or json or txt` files asynchronously
+Save `yaml or json or txt or ini` files asynchronously
 
 # How to use
 
