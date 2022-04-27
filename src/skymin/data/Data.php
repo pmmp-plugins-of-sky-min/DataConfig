@@ -53,10 +53,13 @@ final class Data{
 	/** @var mixed[] */ 
 	public array $data;
 
+	/** @var mixed[] */
+	private array $before;
+
 	/** @param mixed[] $default */
 	public function __construct(
 		private string $fileName,
-		private int $type = self::JSON,
+		private int $type,
 		array $default = []
 	){
 		$this->load($default);
@@ -64,6 +67,7 @@ final class Data{
 
 	/** @param mixed[] $default */
 	private function load(array $default) : void{
+		$this->before = $default;
 		$fileName = $this->fileName;
 		if(!file_exists($fileName)){
 			$this->data = $default;
@@ -99,6 +103,10 @@ final class Data{
 		return $this->fileName;
 	}
 
+	public function getBeforeData() : array{
+		return $this->before;
+	}
+
 	public function __get(mixed $key = null) : mixed{
 		if($key === null){
 			return $this->data;
@@ -107,8 +115,9 @@ final class Data{
 	}
 
 	public function __set(mixed $key, mixed $value) : void{
+		$this->before = $this->data;
 		if($key === null){
-			$this->data = $value;
+			$this->data[] = $value;
 			return;
 		}
 		$this->data[$key] = $value;
@@ -119,6 +128,7 @@ final class Data{
 	}
 
 	public function __unset(mixed $key) : void{
+		$this->before = $this->data;
 		unset($this->data[$key]);
 	}
 
