@@ -131,7 +131,7 @@ final class Data{
 	public function __set(mixed $key, mixed $value) : void{
 		$this->before = $this->data;
 		if($key === null){
-			$this->data[] = $value;
+			$this->data = $value;
 			return;
 		}
 		$this->data[$key] = $value;
