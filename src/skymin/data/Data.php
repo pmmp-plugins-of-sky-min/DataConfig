@@ -79,7 +79,7 @@ final class Data{
 				'js', 'json' => self::JSON,
 				'text', 'list' => self::LIST,
 				'ini' => self::INI,
-				default => throw new RuntimeException('Cannot detect config type of' . $fileName);
+				default => throw new RuntimeException('Cannot detect config type of' . $fileName)
 			};
 		}
 		$this->before = $default;
