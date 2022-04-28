@@ -73,7 +73,7 @@ final class Data{
 	private function load(array $default) : void{
 		$fileName = $this->fileName;
 		if($this->type === self::AUTO){
-			$ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+			$ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
 			$this->type = match($ext){
 				'yml', 'yaml' => self::YAML,
 				'js', 'json' => self::JSON,
