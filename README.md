@@ -24,7 +24,7 @@ $this->data->{key:magic method}
 ```
 
 ## set data
-```
+```php
 $this->data->setAll($array);
 $this->data->{key:magic method} = $value;
 ```
