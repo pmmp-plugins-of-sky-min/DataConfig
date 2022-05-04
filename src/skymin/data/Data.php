@@ -126,7 +126,8 @@ final class Data{
 	}
 
 	public function setAll(array $data) : void{
-		return $this->data = $data;
+		$this->before = $this->data;
+		$this->data = $data;
 	}
 
 	public function __get(string $key) : mixed{
