@@ -55,7 +55,7 @@ final class Data{
 	public const INI = 3; //.ini
 
 	/** @var mixed[] */ 
-	public array $data;
+	private array $data;
 
 	/** @var mixed[] */
 	private array $before;
@@ -121,27 +121,29 @@ final class Data{
 		return $this->before;
 	}
 
-	public function __get(mixed $key = null) : mixed{
-		if($key === null){
-			return $this->data;
-		}
-		return $this->data[$key];
+	public function getAll() : array{
+		return $this->data;
 	}
 
-	public function __set(mixed $key, mixed $value) : void{
+	public function setAll(array $data) : void{
 		$this->before = $this->data;
-		if($key === null){
-			$this->data = $value;
-			return;
-		}
+		$this->data = $data;
+	}
+
+	public function __get(string $key) : mixed{
+		return $this->data[$key] ?? null;
+	}
+
+	public function __set(string $key, mixed $value) : void{
+		$this->before = $this->data;
 		$this->data[$key] = $value;
 	}
 
-	public function __isset(mixed $key) : bool{
-		return (isset($this->data[$key]));
+	public function __isset(string $key) : bool{
+		return isset($this->data[$key]);
 	}
 
-	public function __unset(mixed $key) : void{
+	public function __unset(string $key) : void{
 		$this->before = $this->data;
 		unset($this->data[$key]);
 	}

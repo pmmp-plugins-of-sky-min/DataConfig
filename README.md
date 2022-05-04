@@ -19,18 +19,19 @@ $this->data->save();
 
 ## get data
 ```php
-1. $this->db = $this->data->__get(mixed $key);
-2. $this->db = $this->data->data;
+$this->data->getAll();
+$this->data->{key:magic method}
 ```
 
 ## set data
-```
-1. $this->data->__set(mixed $key, mixed $value);
-2, $this->data->data = $array;
+```php
+$this->data->setAll($array);
+$this->data->{key:magic method} = $value;
 ```
 
 ### $type
 ```php
+Data::AUTO
 Data::YAML
 Data::JSON
 Data::LIST
