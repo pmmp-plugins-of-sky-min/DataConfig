@@ -1,0 +1,15 @@
+{
+  "name": "skymin/dataconfig",
+  "description": "PocketMine-MP async save confif",
+  "type": "library",
+  "license": "MIT",
+  "require": {
+    "php": "^8.0",
+    "pocketmine/pocketmine-mp": ">=4.0.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "skymin\\Data\\": "src/"
+    }
+  }
+}
